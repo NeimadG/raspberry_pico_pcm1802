@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "moniteurrf_lib")(type "KiCad")(uri "C:/Users/deusn/Documents/dev/rpi-pico/monitorAudioRF/elec/emetteur/emetteur/monrf_lib.kicad_sym")(options "")(descr ""))
+)

@@ -1,0 +1,78 @@
+;pio_pcm1802.pio
+;
+
+.program pcm1802_in_master
+.define PIN_DOUT 0
+.define PIN_LRCK 2
+.define PIN_BCK 4
+
+public entry_point:
+    ; pre-sync
+    wait 1 pin PIN_LRCK ; wait on LRCK for a sample on left channel. Maybe already on a ongoing transmission on that channel
+    wait 0 pin PIN_LRCK ; wait on LRCK for a sample on right channel. For sure on it
+
+.wrap_target
+public frame_left:
+    set X, 23
+    wait 1 pin PIN_LRCK ; wait for a sample on left channel (LRCK high level)
+public frame_left_bit:
+    wait 0 pin PIN_BCK ; make sure bit clock is low
+    wait 1 pin PIN_BCK ; wait for rising edge on bit clock
+    
+    ; jmp frame_right ; uncomment to ignore left channel
+    in PINS, 1
+    
+    ; loop until 24 bits are read
+    jmp X--, frame_left_bit 
+    
+    ; here, all 24 bits are in ISR
+    ; prior to write to FIFO, shift 8 bits
+    in NULL, 8
+    ; push 32 bits in FIFO
+    push ; push ISR in FIFO
+    
+    
+public frame_right:
+    set X, 23
+    wait 0 pin PIN_LRCK ; wait for a sample on right channel (LRCK low level)
+public frame_right_bit:
+    wait 0 pin PIN_BCK ; make sure bit clock is low
+    wait 1 pin PIN_BCK ; wait for rising edge on bit clock
+    
+    ; jmp frame_left ; uncomment to ignore right channel
+    in PINS, 1
+    
+    ; loop until 24 bits are read
+    jmp X--, frame_right_bit
+    
+    ; here, all 24 bits are in ISR
+    ; prior to write to FIFO, shift 8 bits
+    in NULL, 8
+    ; push 32 bits in FIFO
+    push ; push ISR in FIFO
+
+.wrap
+
+% c-sdk {
+
+static inline void pcm1802_in_master_program_init(PIO pio, uint8_t sm, uint8_t offset, uint8_t bit_depth, uint8_t sig_pin_base) {
+    pio_gpio_init(pio, sig_pin_base);       // DOUT
+    //pio_gpio_init(pio, sig_pin_base + 1); // POW - NOT IN PROTOCOL
+    pio_gpio_init(pio, sig_pin_base + 2);   // LRCK
+    //pio_gpio_init(pio, sig_pin_base + 3); // FSYN - NOT USED IN THIS IMPLEMENTATION
+    pio_gpio_init(pio, sig_pin_base + 4);   // BCK
+
+    pio_sm_config sm_config = pcm1802_in_master_program_get_default_config(offset);
+    sm_config_set_in_pin_base(&sm_config, sig_pin_base);
+    sm_config_set_in_pin_count(&sm_config, 5); // from DOUT to BCK
+
+    sm_config_set_in_shift (&sm_config, false, false, 24); //no autopush
+    sm_config_set_fifo_join(&sm_config, PIO_FIFO_JOIN_RX);
+    pio_sm_init(pio, sm, offset, &sm_config);
+
+    uint32_t pin_mask = 0x15 << sig_pin_base;
+    pio_sm_set_pindirs_with_mask(pio, sm, 0, pin_mask); //all pins corresponding to mask as input  
+}
+
+
+%}
