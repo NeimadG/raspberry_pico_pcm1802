@@ -16,7 +16,7 @@ Pico can be configured to change this clock speed (and also audio sample rate).
 A PIO state machine is used to capture data. By default left and right channels are captured, but some minor code changes allow to ignore one. See PIO code.
 
 A DMA channel is used to store data into memory, with a double buffer principle. A semaphore is used to notify main program that a buffer is ready to be processed.
-Samples are read as signed 32 bit words (one for each channel).
+Samples are read as signed 32 bit words (one for each channel), 24 usefull bits plus 8 stuffing bits.
 
 Schematics :
 <img width="1115" height="625" alt="rpico_PCM1802" src="https://github.com/user-attachments/assets/7a5319ec-5796-4c85-b490-25cc34528cf4" />
