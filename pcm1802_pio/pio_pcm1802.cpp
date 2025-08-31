@@ -95,12 +95,12 @@ void start_PCM1802()
   // PCM1802 configured as 384*fs
   // 384*44100=16934400
   // best approximation
-  // div = 7,440475464
-  // real sample rate = (126MHz / div) / 384 = 44100.00431
+  // div = 7.38142395
+  // real sample rate = (125MHz / div) / 384 = 44100.005
   // adjust for other sample rates (48kHz, 96kHz, etc.)
   gpio_init(PIN_PCM1802_SYSCLK);
   gpio_set_dir(PIN_DOUT, GPIO_OUT);
-  clock_gpio_init(PIN_PCM1802_SYSCLK, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_CLK_SYS, 7.440475464);
+  clock_gpio_init(PIN_PCM1802_SYSCLK, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_CLK_SYS, 7.38142395);
 
   gpio_init(PIN_DOUT);
   gpio_init(PIN_BCLK);
